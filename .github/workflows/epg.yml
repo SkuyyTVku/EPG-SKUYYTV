@@ -1,0 +1,35 @@
+name: Update EPG
+
+on:
+  schedule:
+    - cron: "0 */3 * * *"   # jalan tiap 3 jam sekali (UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+
+      - name: Install dependencies
+        run: pip install requests lxml
+
+      - name: Grab EPG
+        run: python grab_epg.py
+
+      - name: Commit & Push
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add skuyyepgtvku.xml
+          git commit -m "Update EPG" || echo "No changes"
+          git push
