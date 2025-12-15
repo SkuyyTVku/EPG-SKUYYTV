@@ -1,89 +1,35 @@
-import requests
-import lxml.etree as ET
-import json
-import re
-from datetime import datetime, timedelta, timezone
+name: Update EPG
 
-# ===============================
-# WAKTU & RANGE EPG
-# ===============================
-TZ = timezone(timedelta(hours=7))   # WIB +0700
-NOW = datetime.now(TZ)
-END_TIME = NOW + timedelta(days=2)  # hari ini + besok
+on:
+  schedule:
+    - cron: "0 */3 * * *"   # jalan tiap 3 jam sekali (UTC)
+  workflow_dispatch:
 
-def parse_time(t):
-    return datetime.strptime(t[:14], "%Y%m%d%H%M%S").replace(tzinfo=TZ)
+permissions:
+  contents: write
 
-# ===============================
-# LOAD CONFIG
-# ===============================
-with open("config.json") as f:
-    config = json.load(f)
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-output_file = config["output"]
-root = ET.Element("tv")
+    steps:
+      - uses: actions/checkout@v3
 
-added_channels = set()
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
 
-# ===============================
-# FETCH & FILTER EPG
-# ===============================
-for source in config["sources"]:
-    url = source["url"]
-    name = source["name"]
+      - name: Install dependencies
+        run: pip install requests lxml
 
-    try:
-        print(f"[{name}] Fetching {url} ...")
-        r = requests.get(url, timeout=60)
-        r.raise_for_status()
-        xml_data = ET.fromstring(r.content)
+      - name: Grab EPG
+        run: python grab_epg.py
 
-        for elem in xml_data:
-
-            # ---------- CHANNEL ----------
-            if elem.tag == "channel":
-                cid = elem.get("id")
-                if cid and cid not in added_channels:
-                    root.append(elem)
-                    added_channels.add(cid)
-
-            # ---------- PROGRAMME ----------
-            elif elem.tag == "programme":
-                start = elem.get("start")
-                stop = elem.get("stop")
-                channel = elem.get("channel")
-
-                if not start or not stop or not channel:
-                    continue
-
-                try:
-                    start_dt = parse_time(start)
-                    stop_dt = parse_time(stop)
-                except:
-                    continue
-
-                # Buang programme di luar range (2 hari)
-                if stop_dt < NOW or start_dt > END_TIME:
-                    continue
-
-                # Edit title → branding
-                for title in elem.findall("title"):
-                    if title.text:
-                        text = title.text.strip()
-                        if re.search(r"\([^)]*\)$", text):
-                            text = re.sub(r"\([^)]*\)$", "(SKUYY TV)", text)
-                        else:
-                            text = f"{text} (SKUYY TV)"
-                        title.text = text
-
-                root.append(elem)
-
-    except Exception as e:
-        print(f"[{name}] Gagal ambil: {e}")
-
-# ===============================
-# WRITE OUTPUT
-# ===============================
-tree = ET.ElementTree(root)
-tree.write(output_file, encoding="utf-8", xml_declaration=True)
-print(f"Selesai, hasil di {output_file}")
+      - name: Commit & Push
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add skuyyepgtvku.xml
+          git commit -m "Update EPG" || echo "No changes"
+          git push
