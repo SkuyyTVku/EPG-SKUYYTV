@@ -5,7 +5,7 @@ import re
 from datetime import datetime, timedelta
 
 # ==================================
-# RANGE WAKTU EPG (SEDANG TAYANG + BESOK)
+# RANGE WAKTU EPG (LIVE + BESOK)
 # ==================================
 NOW = datetime.now().astimezone() - timedelta(hours=3)
 END_TIME = datetime.now().astimezone() + timedelta(hours=36)
@@ -38,7 +38,14 @@ for source in config["sources"]:
             # ---------- CHANNEL ----------
             if elem.tag == "channel":
                 cid = elem.get("id")
-                if cid and cid not in added_channels:
+                if not cid:
+                    continue
+
+                # PERTAHANKAN REGION ASLI
+                cid = cid.lower().strip()
+
+                if cid not in added_channels:
+                    elem.set("id", cid)
                     root.append(elem)
                     added_channels.add(cid)
 
@@ -61,23 +68,15 @@ for source in config["sources"]:
                 if stop_dt < NOW or start_dt > END_TIME:
                     continue
 
-                # ---------- CLEAN & BRAND TITLE ----------
+                # SYNC CHANNEL (REGION ASLI)
+                elem.set("channel", channel.lower().strip())
+
+                # ---------- HAPUS TEXT THAILAND ----------
                 for title in elem.findall("title"):
                     if title.text:
                         text = title.text.strip()
-
-                        # HAPUS KARAKTER THAILAND
                         text = re.sub(r"[\u0E00-\u0E7F]+", "", text)
-
-                        # RAPiKAN SPASI
                         text = re.sub(r"\s{2,}", " ", text).strip()
-
-                        # BRANDING
-                        if re.search(r"\([^)]*\)$", text):
-                            text = re.sub(r"\([^)]*\)$", "(SKUYY TV)", text)
-                        else:
-                            text = f"{text} (SKUYY TV)"
-
                         title.text = text
 
                 root.append(elem)
