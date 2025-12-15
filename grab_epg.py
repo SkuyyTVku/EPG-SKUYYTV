@@ -5,11 +5,11 @@ import re
 from datetime import datetime, timedelta, timezone
 
 # ===============================
-# WAKTU & RANGE EPG
+# WAKTU & RANGE EPG (FIX)
 # ===============================
 TZ = timezone(timedelta(hours=7))   # WIB +0700
-NOW = datetime.now(TZ)
-END_TIME = NOW + timedelta(days=2)  # hari ini + besok
+NOW = datetime.now(TZ) - timedelta(hours=3)  # BUFFER KE BELAKANG
+END_TIME = datetime.now(TZ) + timedelta(days=2)  # hari ini + besok
 
 def parse_time(t):
     return datetime.strptime(t[:14], "%Y%m%d%H%M%S").replace(tzinfo=TZ)
@@ -62,11 +62,11 @@ for source in config["sources"]:
                 except:
                     continue
 
-                # Buang programme di luar range (2 hari)
+                # FILTER RANGE (FIXED)
                 if stop_dt < NOW or start_dt > END_TIME:
                     continue
 
-                # Edit title → branding
+                # BRANDING TITLE
                 for title in elem.findall("title"):
                     if title.text:
                         text = title.text.strip()
