@@ -2,32 +2,27 @@ import requests
 import lxml.etree as ET
 import json
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
-# ===============================
-# WAKTU & RANGE EPG (FIX)
-# ===============================
-TZ = timezone(timedelta(hours=7))   # WIB +0700
-NOW = datetime.now(TZ) - timedelta(hours=3)  # BUFFER KE BELAKANG
-END_TIME = datetime.now(TZ) + timedelta(days=2)  # hari ini + besok
+# ==================================
+# RANGE WAKTU EPG (FINAL)
+# ==================================
+NOW = datetime.now().astimezone() - timedelta(hours=3)     # buffer ke belakang
+END_TIME = datetime.now().astimezone() + timedelta(hours=36)  # ke depan
 
-def parse_time(t):
-    return datetime.strptime(t[:14], "%Y%m%d%H%M%S").replace(tzinfo=TZ)
-
-# ===============================
+# ==================================
 # LOAD CONFIG
-# ===============================
+# ==================================
 with open("config.json") as f:
     config = json.load(f)
 
 output_file = config["output"]
 root = ET.Element("tv")
-
 added_channels = set()
 
-# ===============================
+# ==================================
 # FETCH & FILTER EPG
-# ===============================
+# ==================================
 for source in config["sources"]:
     url = source["url"]
     name = source["name"]
@@ -57,12 +52,13 @@ for source in config["sources"]:
                     continue
 
                 try:
-                    start_dt = parse_time(start)
-                    stop_dt = parse_time(stop)
+                    # parse timezone asli dari source (+0000 / +0700 / dll)
+                    start_dt = datetime.strptime(start, "%Y%m%d%H%M%S %z")
+                    stop_dt = datetime.strptime(stop, "%Y%m%d%H%M%S %z")
                 except:
                     continue
 
-                # FILTER RANGE (FIXED)
+                # FILTER RANGE
                 if stop_dt < NOW or start_dt > END_TIME:
                     continue
 
@@ -81,9 +77,9 @@ for source in config["sources"]:
     except Exception as e:
         print(f"[{name}] Gagal ambil: {e}")
 
-# ===============================
+# ==================================
 # WRITE OUTPUT
-# ===============================
+# ==================================
 tree = ET.ElementTree(root)
 tree.write(output_file, encoding="utf-8", xml_declaration=True)
 print(f"Selesai, hasil di {output_file}")
