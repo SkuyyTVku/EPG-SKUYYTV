@@ -5,10 +5,10 @@ import re
 from datetime import datetime, timedelta
 
 # ==================================
-# RANGE WAKTU EPG (FINAL)
+# RANGE WAKTU EPG (SEDANG TAYANG + BESOK)
 # ==================================
-NOW = datetime.now().astimezone() - timedelta(hours=3)     # buffer ke belakang
-END_TIME = datetime.now().astimezone() + timedelta(hours=36)  # ke depan
+NOW = datetime.now().astimezone() - timedelta(hours=3)
+END_TIME = datetime.now().astimezone() + timedelta(hours=36)
 
 # ==================================
 # LOAD CONFIG
@@ -52,7 +52,6 @@ for source in config["sources"]:
                     continue
 
                 try:
-                    # parse timezone asli dari source (+0000 / +0700 / dll)
                     start_dt = datetime.strptime(start, "%Y%m%d%H%M%S %z")
                     stop_dt = datetime.strptime(stop, "%Y%m%d%H%M%S %z")
                 except:
@@ -62,14 +61,23 @@ for source in config["sources"]:
                 if stop_dt < NOW or start_dt > END_TIME:
                     continue
 
-                # BRANDING TITLE
+                # ---------- CLEAN & BRAND TITLE ----------
                 for title in elem.findall("title"):
                     if title.text:
                         text = title.text.strip()
+
+                        # HAPUS KARAKTER THAILAND
+                        text = re.sub(r"[\u0E00-\u0E7F]+", "", text)
+
+                        # RAPiKAN SPASI
+                        text = re.sub(r"\s{2,}", " ", text).strip()
+
+                        # BRANDING
                         if re.search(r"\([^)]*\)$", text):
                             text = re.sub(r"\([^)]*\)$", "(SKUYY TV)", text)
                         else:
                             text = f"{text} (SKUYY TV)"
+
                         title.text = text
 
                 root.append(elem)
