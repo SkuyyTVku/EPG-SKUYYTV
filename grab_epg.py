@@ -29,13 +29,18 @@ for source in config["sources"]:
         xml_data = ET.fromstring(r.content)
 
         for elem in xml_data:
-
-            # Edit title programme
             if elem.tag == "programme":
                 for title in elem.findall("title"):
                     if title.text:
                         text = title.text.strip()
 
+                        # 🔴 HAPUS HURUF THAILAND
+                        text = re.sub(r"[\u0E00-\u0E7F]+", "", text)
+
+                        # Rapikan spasi
+                        text = re.sub(r"\s{2,}", " ", text).strip()
+
+                        # Tambah / ganti akhiran
                         if re.search(r"\([^)]*\)$", text):
                             text = re.sub(r"\([^)]*\)$", "(SKUYY TV)", text)
                         else:
