@@ -12,7 +12,6 @@ with open("config.json") as f:
     config = json.load(f)
 
 output_file = config["output"]
-
 root = ET.Element("tv")
 
 # ==========================
@@ -34,13 +33,16 @@ for source in config["sources"]:
                     if title.text:
                         text = title.text.strip()
 
-                        # 🔴 HAPUS HURUF THAILAND
+                        # 1️⃣ HAPUS KARAKTER THAILAND
                         text = re.sub(r"[\u0E00-\u0E7F]+", "", text)
 
-                        # Rapikan spasi
+                        # 2️⃣ HAPUS SEMUA NON-ASCII (sisa Thai / simbol aneh)
+                        text = re.sub(r"[^\x00-\x7F]+", "", text)
+
+                        # 3️⃣ RAPKAN SPASI
                         text = re.sub(r"\s{2,}", " ", text).strip()
 
-                        # Tambah / ganti akhiran
+                        # 4️⃣ TAMBAH / GANTI AKHIRAN
                         if re.search(r"\([^)]*\)$", text):
                             text = re.sub(r"\([^)]*\)$", "(SKUYY TV)", text)
                         else:
