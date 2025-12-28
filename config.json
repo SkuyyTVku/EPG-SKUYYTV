@@ -1,6 +1,12 @@
 {
   "sources": [
-    { "url": "https://opop.pro/QqD8g3LQT1YRH", "name": "SKUYYTV_v1" }
+    {
+      "url": "https://url.skuyytv.xyz/EPGJANGANDIMALINGPLISS?key=3zci",
+      "name": "SKUYYTV_v1",
+      "headers": {
+        "User-Agent": "IJINDULU@SKUYY_TV"
+      }
+    }
   ],
   "output": "./skuyyepgtvku.xml"
 }
