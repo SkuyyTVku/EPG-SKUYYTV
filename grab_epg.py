@@ -86,7 +86,7 @@ def clean_to_skuyy(fixed_id):
         "daaitv", "gtv", "jtv", "jaktv", "mdtv", "mnctv", 
         "rajawalitv", "tvri", "btv", "garudatv", "inewstv", 
         "jawapostv", "kompastv", "metrotv", "sinpotv", "rtv", "8tv", 
-        "mentaritv", "hgtv" , "warnertv" 
+        "mentaritv", "hgtv" , "warnertv" , "vtv" 
     ]
     is_special = any(sp in clean for sp in special_channels)
 
