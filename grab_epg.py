@@ -17,7 +17,7 @@ except FileNotFoundError:
     exit()
 
 output_file = config.get("output", "skuyyepgtvku.xml")
-root = ET.Element("tv", attrib={"generator-info-name": "SKUYY-TV-EPG-Generator"})
+root = ET.Element("tv", attrib={"generator-info-name": "SKUYYTV-EPG"})
 
 processed_channels = set()
 processed_programmes = set()
